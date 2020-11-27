@@ -1,10 +1,3 @@
-/*
-Test out the AHRS code in ahrs/ahrs.go.
-Define a flight path/attitude in code, and then synthesize the matching GPS, gyro, accel (and other) data
-Add some noise if desired.
-Then see if the AHRS code can replicate the "true" attitude given the noisy and limited input data
-*/
-
 package main
 
 import (
@@ -16,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"../ahrs"
+	"rpi4ahrs.org/ahrs"
 	"encoding/json"
 )
 
@@ -44,8 +37,7 @@ func main() {
 		ahrsConfig                                          map[string]float64
 		s                                                   ahrs.AHRSProvider
 		scenario                                            string
-		sit                                                 Situation
-		err                                                 error
+		// err                                                 error
 	)
 
 	gyroBias = make([]float64, 3)
@@ -119,22 +111,22 @@ func main() {
 	flag.StringVar(&ahrsConfigStr, "c", defaultConfig, configUsage)
 	flag.Parse()
 
-	switch scenario {
-	/*
-	case "takeoff":
-		sit = sitTakeoffDef
-	case "turn":
-		sit = sitTurnDef
-	*/
-	default:
-		log.Printf("Loading data from %s\n", scenario)
-		sit, err = NewSituationFromFile(scenario)
-		if err != nil {
-			log.Fatalln(err)
-		}
-	}
+	// switch scenario {
+	// /*
+	// case "takeoff":
+	// 	sit = sitTakeoffDef
+	// case "turn":
+	// 	sit = sitTurnDef
+	// */
+	// default:
 
-	s0 := new(ahrs.State)      // Actual state from simulation, for comparison
+
+	// 	if err != nil {
+	// 		log.Fatalln(err)
+	// 	}
+	// }
+
+	// s0 := new(ahrs.State)      // Actual state from simulation, for comparison
 	m := ahrs.NewMeasurement() // Measurement from IMU
 
 	fmt.Println("Simulation parameters:")
@@ -186,16 +178,16 @@ func main() {
 	fmt.Printf("\tNoise: %f G\n", magNoise)
 	fmt.Printf("\tBias: %f,%f,%f\n", magBias[0], magBias[1], magBias[2])
 
-	uBias := []float64{asiBias, 0, 0}
+	// uBias := []float64{asiBias, 0, 0}
 
-	// if err := json.Unmarshal([]byte(ahrsConfigStr), &ahrsConfig); err != nil {
-	// 	log.Printf("Bad config: %s\n", err.Error())
-	// }
-	// log.Printf("ahrs config: %v\n", ahrsConfig)
-	// s.SetConfig(ahrsConfig)
+	if err := json.Unmarshal([]byte(ahrsConfigStr), &ahrsConfig); err != nil {
+		log.Printf("Bad config: %s\n", err.Error())
+	}
+	log.Printf("ahrs config: %v\n", ahrsConfig)
+	s.SetConfig(ahrsConfig)
 
 	// Set up logging
-	// logMap := s.GetLogMap()
+	logMap := s.GetLogMap()
 	// logMapActual := sit.GetLogMap()
 	// var transferLogMap = func() {
 	// 	for k, v := range logMapActual {
@@ -203,34 +195,42 @@ func main() {
 	// 	}
 	// }
 	// transferLogMap()
-	// ahrsLogger := ahrs.NewAHRSLogger("ahrs.csv", logMap)
+	ahrsLogger := ahrs.NewAHRSLogger("ahrs.csv", logMap)
 
 	// This is where it all happens
 	fmt.Println("Running Simulation")
-	
+	// sit.BeginTime()
+	// sit.UpdateMeasurement(m, !asiInop, !gpsInop, true, !magInop,
+		// asiNoise, gpsNoise, accelNoise, gyroNoise, magNoise,
+		// uBias, accelBias, gyroBias, magBias)
 
 	for {
 		// Peek behind the curtain: the "actual" state, which the algorithm doesn't know
 		// if err := sit.UpdateState(s0, accelBias, gyroBias, magBias); err != nil {
-		// 	log.Printf("Interpolation error at time %f: %s\n", m.T, err)
-		// 	break
+			// log.Printf("Interpolation error at time %f: %s\n", m.T, err)
+			// break
 		// }
 		//TODO westphae: log actual state
 
 		// Take sensor measurements
-		
+		// if err := sit.UpdateMeasurement(m, !asiInop, !gpsInop, true, !magInop,
+		// 	asiNoise, gpsNoise, accelNoise, gyroNoise, magNoise,
+		// 	uBias, accelBias, gyroBias, magBias); err != nil {
+		// 	log.Printf("Measurement error at time %f: %s\n", m.T, err)
+		// 	break
+		// }
 
 		s.Compute(m)
 
 		// Log to csv for serving
-		transferLogMap()
+		// transferLogMap()
 		ahrsLogger.Log()
 
 		// err = sit.NextTime()
-		if err != nil {
-			log.Println(err)
-			break
-		}
+		// if err != nil {
+		// 	log.Println(err)
+		// 	break
+		// }
 
 	}
 
