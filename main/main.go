@@ -9,8 +9,9 @@ import (
 	"strconv"
 	"strings"
 
-	"rpi4ahrs.org/ahrs"
 	"encoding/json"
+
+	"rpi4ahrs.org/ahrs"
 )
 
 func parseFloatArrayString(str string, a *[]float64) (err error) {
@@ -24,6 +25,10 @@ func parseFloatArrayString(str string, a *[]float64) (err error) {
 }
 
 func main() {
+
+	http.Handle("/", http.FileServer(http.Dir("./")))
+	http.ListenAndServe(":8080", nil)
+
 	// Handle some shell arguments
 	var (
 		pdt, udt                                            float64
@@ -120,7 +125,6 @@ func main() {
 	// */
 	// default:
 
-
 	// 	if err != nil {
 	// 		log.Fatalln(err)
 	// 	}
@@ -132,10 +136,10 @@ func main() {
 	fmt.Println("Simulation parameters:")
 	switch strings.ToLower(algo) {
 	/*
-	case "kalman":
-		fmt.Println("Running Kalman AHRS")
-		ioutil.WriteFile("config.json", []byte(ahrs.KalmanJSONConfig), 0644)
-		s = ahrs.InitializeKalman(m)
+		case "kalman":
+			fmt.Println("Running Kalman AHRS")
+			ioutil.WriteFile("config.json", []byte(ahrs.KalmanJSONConfig), 0644)
+			s = ahrs.InitializeKalman(m)
 	*/
 	case "simple":
 		fallthrough // simple is the default.
@@ -201,14 +205,14 @@ func main() {
 	fmt.Println("Running Simulation")
 	// sit.BeginTime()
 	// sit.UpdateMeasurement(m, !asiInop, !gpsInop, true, !magInop,
-		// asiNoise, gpsNoise, accelNoise, gyroNoise, magNoise,
-		// uBias, accelBias, gyroBias, magBias)
+	// asiNoise, gpsNoise, accelNoise, gyroNoise, magNoise,
+	// uBias, accelBias, gyroBias, magBias)
 
 	for {
 		// Peek behind the curtain: the "actual" state, which the algorithm doesn't know
 		// if err := sit.UpdateState(s0, accelBias, gyroBias, magBias); err != nil {
-			// log.Printf("Interpolation error at time %f: %s\n", m.T, err)
-			// break
+		// log.Printf("Interpolation error at time %f: %s\n", m.T, err)
+		// break
 		// }
 		//TODO westphae: log actual state
 
@@ -235,7 +239,6 @@ func main() {
 	}
 
 	// Run analysis web server
-	fmt.Println("Serving charts")
-	http.Handle("/", http.FileServer(http.Dir("./")))
-	http.ListenAndServe(":8080", nil)
+	// fmt.Println("Serving charts")
+
 }
